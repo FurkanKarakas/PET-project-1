@@ -10,6 +10,7 @@ of the system and reduce potential networking problems which might happen while
 running the application in different environments.
 
 ### Skeleton
+
 You will have to implement the SMC client, the trusted parameter generator,
 secret sharing mechanisms, and tools for specifying expressions to compute. We
 already implemented network communications and the trusted server, along with a
@@ -20,28 +21,31 @@ test suite that your implementation will have to pass.
 The skeleton contains the following files.
 
 Components for building an SMC protocol. You should modify these:
-* `expression.py`—Tools for defining arithmetic expressions.
-* `secret_sharing.py`—Secret sharing scheme
-* `ttp.py`—Trusted parameter generator for the Beaver multiplication scheme.
-* `smc_party.py`—SMC party implementation
-* `test_integration.py`—Integration test suite.
-* `test_expression.py`—Template of a test suite for expression handling.
-* `test_ttp.py`—Template of a test suite for the trusted parameter generator.
-* `test_secret_sharing.py`—Template of a test suite for secret sharing.
+
+- `expression.py`—Tools for defining arithmetic expressions.
+- `secret_sharing.py`—Secret sharing scheme
+- `ttp.py`—Trusted parameter generator for the Beaver multiplication scheme.
+- `smc_party.py`—SMC party implementation
+- `test_integration.py`—Integration test suite.
+- `test_expression.py`—Template of a test suite for expression handling.
+- `test_ttp.py`—Template of a test suite for the trusted parameter generator.
+- `test_secret_sharing.py`—Template of a test suite for secret sharing.
 
 Code that handles the communication. You should not need to modify these files unless
 you bump into some serialization issues.
-* `protocol.py`—Specification of SMC protocol
-* `communication.py`—SMC party-side of communication
-* `server.py`—Trusted server to exchange information between SMC parties
+
+- `protocol.py`—Specification of SMC protocol
+- `communication.py`—SMC party-side of communication
+- `server.py`—Trusted server to exchange information between SMC parties
 
 Read the comments in each of the files for more details and pointers.
 
 #### Requirements and what files should you change
+
 As you can see above, you can change most of the files in this skeleton.
 However, the **requirement** is that all existing tests in `test_integration.py`
 should pass **without any modification** (you can, however, add new tests.) We
-will test your solution using our own version of ``test_integration.py`` and all
+will test your solution using our own version of `test_integration.py` and all
 failing tests will negatively contribute to the grade.
 
 ### Testing
@@ -50,21 +54,26 @@ An integral part of a system development is testing.
 For this first project, we provide you with an integration test suite to ensure
 the functionalities you will have to implement works correctly.
 
-They are implemented using *pytest*, and you can run them using the command
+They are implemented using _pytest_, and you can run them using the command
+
 ```
 python3 -m pytest
 ```
+
 in the directory of the skeleton.
 
 If you want to run only one specific test suite, you can specify the file in
 the command line. For example, if we only want to test our implementation for
 handling the expression, we will run the following command:
+
 ```
 python3 -m pytest test_expression.py
 ```
+
 In some versions, pytest captures the program output, and only displays the
 result of the test. When debugging, you can disable this capture by passing the
 option `-s` to Pytest.
+
 ```
 python3 -m pytest -s
 ```
@@ -90,9 +99,11 @@ higher version, in which case, ensure that you only use features supported by
 Python 3.6 in your code.
 
 You can install the dependant python libraries by running the command
+
 ```
 python3 -m pip install -r requirements.txt
 ```
+
 in the directory of the skeleton.
 
 Also, the name given to the Python binary might differ depending on your
@@ -101,8 +112,8 @@ Python 3 interpreter is `python3`, in some systems, the command might simply be
 called `python`. So when running the commands we provide, ensure you are using
 the correct interpreter.
 
-**Note:** For your curiosity, the network communications rely on the library *Requests*,
-and on the *Flask* framework, while the tests are implemented with the *pytest*
+**Note:** For your curiosity, the network communications rely on the library _Requests_,
+and on the _Flask_ framework, while the tests are implemented with the _pytest_
 framework.
 Feel free to check their documentation, if you would like to understand in
 details how they work, and feel free to have a look at the files
@@ -137,39 +148,41 @@ as your development environment.
 
 In VirtualBox, you can set up ssh access to the VM by following these steps:
 
- * Open the settings of your image
- * Go to the "Network" panel
- * Choose "Advanced" and click on the "Port forwarding" button
- * Add a forwarding rule (green "plus" button on the side)
- * In the forwarding rule, leave IP addresses empty, set **Host port** to _2222_,
-   and **Guest port** to 22 (the default SSH port)
- * Restart the virtual machine
+- Open the settings of your image
+- Go to the "Network" panel
+- Choose "Advanced" and click on the "Port forwarding" button
+- Add a forwarding rule (green "plus" button on the side)
+- In the forwarding rule, leave IP addresses empty, set **Host port** to _2222_,
+  and **Guest port** to 22 (the default SSH port)
+- Restart the virtual machine
 
 Now, you can connect to your virtual machine via ssh:
+
 ```
 ssh -p 2222 student@127.0.0.1
 ```
 
 This is how you copy files _TO_ the VM:
+
 ```
 scp -P 2222 <path_to_copy_from_on_host_OS> student@127.0.0.1:<path_to_copy_to_on_guest_OS>
 ```
 
 Copy files _FROM_ the VM:
+
 ```
 scp -P 2222 student@127.0.0.1:<path_to_copy_from_on_guest_OS> <path_to_copy_to_on_host_OS>
 ```
 
 Another option to exchange data is to have shared directories between the VM
 and your host.
-For this feature to work correctly you have to install *Guest Additions* from
+For this feature to work correctly you have to install _Guest Additions_ from
 VirtualBox on the VM and refer to their documentation.
-
 
 ## Example of a test run
 
 Once a part of your project is finished, you can test if it works correctly with
-*pytest*.  Here is an example of output that the tests might produce if your
+_pytest_. Here is an example of output that the tests might produce if your
 project is well implemented.
 
 ```
