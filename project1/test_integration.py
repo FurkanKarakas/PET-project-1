@@ -38,7 +38,8 @@ def run_processes(server_args, *client_args):
     queue = Queue()
 
     server = Process(target=smc_server, args=(server_args,))
-    clients = [Process(target=smc_client, args=(*args, queue)) for args in client_args]
+    clients = [Process(target=smc_client, args=(*args, queue))
+               for args in client_args]
 
     server.start()
     time.sleep(3)
@@ -67,7 +68,8 @@ def suite(parties, expr, expected):
     participants = list(parties.keys())
 
     prot = ProtocolSpec(expr=expr, participant_ids=participants)
-    clients = [(name, prot, value_dict) for name, value_dict in parties.items()]
+    clients = [(name, prot, value_dict)
+               for name, value_dict in parties.items()]
 
     results = run_processes(participants, *clients)
 
@@ -94,7 +96,6 @@ def test_suite1():
     suite(parties, expr, expected)
 
 
-
 def test_suite2():
     """
     f(a, b) = a - b
@@ -108,7 +109,7 @@ def test_suite2():
     }
 
     expr = (alice_secret - bob_secret)
-    expected = 14 -3
+    expected = 14 - 3
     suite(parties, expr, expected)
 
 
@@ -235,7 +236,7 @@ def test_suite8():
         (
             (alice_secret + Scalar(8)) +
             ((bob_secret * Scalar(9)) - charlie_secret)
-         ) * (david_secret + elusinia_secret)
+        ) * (david_secret + elusinia_secret)
     )
     expected = (((3 + 8) + (14 * 9) - 2) * (5 + 7))
     suite(parties, expr, expected)

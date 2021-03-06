@@ -28,7 +28,6 @@ class TrustedParamGenerator:
     def __init__(self):
         self.participant_ids: Set[str] = set()
 
-
     def add_participant(self, participant_id: str) -> None:
         """
         Add a participant.

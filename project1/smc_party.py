@@ -43,19 +43,18 @@ class SMCParty:
     """
 
     def __init__(
-            self,
-            client_id: str,
-            server_host: str,
-            server_port: int,
-            protocol_spec: ProtocolSpec,
-            value_dict: Dict[Secret, int]
-        ):
+        self,
+        client_id: str,
+        server_host: str,
+        server_port: int,
+        protocol_spec: ProtocolSpec,
+        value_dict: Dict[Secret, int]
+    ):
         self.comm = Communication(server_host, server_port, client_id)
 
         self.client_id = client_id
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
-
 
     def run(self) -> int:
         """
@@ -63,12 +62,12 @@ class SMCParty:
         """
         raise NotImplementedError("You need to implement this method.")
 
-
     # Suggestion: To process expressions, make use of the *visitor pattern* like so:
+
     def process_expression(
-            self,
-            expr: Expression
-        ) -> Share:
+        self,
+        expr: Expression
+    ) -> Share:
         # if expr is an addition operation:
         #     ...
 
@@ -87,3 +86,7 @@ class SMCParty:
         pass
 
     # Feel free to add as many methods as you want.
+
+
+if __name__ == "__main__":
+    print("Hello world!")
