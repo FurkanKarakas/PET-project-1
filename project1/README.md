@@ -56,7 +56,7 @@ the functionalities you will have to implement works correctly.
 
 They are implemented using _pytest_, and you can run them using the command
 
-```
+```python
 python3 -m pytest
 ```
 
@@ -66,7 +66,7 @@ If you want to run only one specific test suite, you can specify the file in
 the command line. For example, if we only want to test our implementation for
 handling the expression, we will run the following command:
 
-```
+```python
 python3 -m pytest test_expression.py
 ```
 
@@ -74,7 +74,7 @@ In some versions, pytest captures the program output, and only displays the
 result of the test. When debugging, you can disable this capture by passing the
 option `-s` to Pytest.
 
-```
+```python
 python3 -m pytest -s
 ```
 
@@ -100,7 +100,7 @@ Python 3.6 in your code.
 
 You can install the dependant python libraries by running the command
 
-```
+```python
 python3 -m pip install -r requirements.txt
 ```
 
@@ -136,7 +136,7 @@ recommend you to develop inside the VM.**
 
 There are two accounts on the VM (`user:password`):
 
-```
+```none
 student:student
 root:root
 ```
@@ -158,19 +158,19 @@ In VirtualBox, you can set up ssh access to the VM by following these steps:
 
 Now, you can connect to your virtual machine via ssh:
 
-```
+```bash
 ssh -p 2222 student@127.0.0.1
 ```
 
 This is how you copy files _TO_ the VM:
 
-```
+```bash
 scp -P 2222 <path_to_copy_from_on_host_OS> student@127.0.0.1:<path_to_copy_to_on_guest_OS>
 ```
 
 Copy files _FROM_ the VM:
 
-```
+```bash
 scp -P 2222 student@127.0.0.1:<path_to_copy_from_on_guest_OS> <path_to_copy_to_on_host_OS>
 ```
 
@@ -185,7 +185,7 @@ Once a part of your project is finished, you can test if it works correctly with
 _pytest_. Here is an example of output that the tests might produce if your
 project is well implemented.
 
-```
+```none
 python3 -m pytest -s
 ============================= test session starts =============================
 platform linux -- Python 3.6.9, pytest-6.2.2, py-1.10.0, pluggy-0.13.1
