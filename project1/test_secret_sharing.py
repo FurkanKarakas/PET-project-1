@@ -6,5 +6,13 @@ MODIFY THIS FILE.
 """
 
 
+from secret_sharing import Share, reconstruct_secret, share_secret
+
+
 def test():
-    raise NotImplementedError("You can create some tests.")
+    print(share_secret(10, 3))
+    print(reconstruct_secret(share_secret(10, 3)))
+
+
+if __name__ == "__main__":
+    test()

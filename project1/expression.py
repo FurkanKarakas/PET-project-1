@@ -11,7 +11,7 @@ MODIFY THIS FILE.
 
 import base64
 import random
-from typing import Optional
+from typing import Optional, List
 
 
 ID_BYTES = 4
@@ -39,13 +39,13 @@ class Expression:
         self.id = id
 
     def __add__(self, other):
-        raise NotImplementedError("You need to implement this method.")
+        return Add(self, other)
 
     def __sub__(self, other):
-        raise NotImplementedError("You need to implement this method.")
+        return Sub(self, other)
 
     def __mul__(self, other):
-        raise NotImplementedError("You need to implement this method.")
+        return Mult(self, other)
 
     def __hash__(self):
         return hash(self.id)
@@ -93,3 +93,52 @@ class Secret(Expression):
 
 
 # Feel free to add as many classes as you like.
+class Add(Expression):
+    """Add two expressions together. Inherits the base `Expression` class."""
+
+    def __init__(
+        self,
+        leftExpression: Expression,
+        rightExpression: Expression,
+        id: Optional[bytes] = None
+    ):
+        super().__init__(id)
+        self.leftExpression = leftExpression
+        self.rightExpression = rightExpression
+
+    def __repr__(self):
+        return f"({self.leftExpression.__repr__()} + {self.rightExpression.__repr__()})"
+
+
+class Sub(Expression):
+    """Subtract two expressions from one another. Inherits the base `Expression` class."""
+
+    def __init__(
+        self,
+        leftExpression: Expression,
+        rightExpression: Expression,
+        id: Optional[bytes] = None
+    ):
+        super().__init__(id)
+        self.leftExpression = leftExpression
+        self.rightExpression = rightExpression
+
+    def __repr__(self):
+        return f"({self.leftExpression.__repr__()} - {self.rightExpression.__repr__()})"
+
+
+class Mult(Expression):
+    """Multiply two expressions together. Inherits the base `Expression` class."""
+
+    def __init__(
+        self,
+        leftExpression: Expression,
+        rightExpression: Expression,
+        id: Optional[bytes] = None
+    ):
+        super().__init__(id)
+        self.leftExpression = leftExpression
+        self.rightExpression = rightExpression
+
+    def __repr__(self):
+        return f"{self.leftExpression.__repr__()} * {self.rightExpression.__repr__()}"

@@ -2,7 +2,11 @@
 Secret sharing scheme.
 """
 
-from typing import List
+from expression import Expression, Scalar, Secret
+from typing import List, Optional
+import random
+
+MODULUS = 1901
 
 
 class Share:
@@ -10,32 +14,48 @@ class Share:
     A secret share in a finite field.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, value: int):
         # Adapt constructor arguments as you wish
-        raise NotImplementedError("You need to implement this method.")
+        self.value = value
 
     def __repr__(self):
         # Helps with debugging.
-        raise NotImplementedError("You need to implement this method.")
+        return f"Share({self.value})"
 
     def __add__(self, other):
-        raise NotImplementedError("You need to implement this method.")
+        return Share((self.value+other.value) % MODULUS)
 
     def __sub__(self, other):
-        raise NotImplementedError("You need to implement this method.")
+        return Share((self.value-other.value) % MODULUS)
 
     def __mul__(self, other):
-        raise NotImplementedError("You need to implement this method.")
+        return Share((self.value*other.value) % MODULUS)
+
+    def __bytes__(self):
+        return int_to_bytes(self.value)
 
 
 def share_secret(secret: int, num_shares: int) -> List[Share]:
     """Generate secret shares."""
-    raise NotImplementedError("You need to implement this method.")
+    shares = list()
+    for _ in range(num_shares):
+        shares.append(Share(random.randrange(0, MODULUS)))
+    shares[0].value = (secret - sum(share.value for i,
+                                    share in enumerate(shares) if i != 0)) % MODULUS
+    return shares
 
 
 def reconstruct_secret(shares: List[Share]) -> int:
     """Reconstruct the secret from shares."""
-    raise NotImplementedError("You need to implement this method.")
+    return sum(share.value for share in shares) % MODULUS
+
+
+def int_to_bytes(x: int) -> bytes:
+    return x.to_bytes((x.bit_length() + 7) // 8, 'big')
+
+
+def int_from_bytes(xbytes: bytes) -> int:
+    return int.from_bytes(xbytes, 'big')
 
 
 # Feel free to add as many methods as you want.

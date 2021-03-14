@@ -104,8 +104,8 @@ def test_suite2():
     bob_secret = Secret()
 
     parties = {
-        "Alice": {alice_secret: 14},
-        "Bob": {bob_secret: 3},
+        "Alice": {alice_secret: 14},  # 7 7 -> 8 8+9=17
+        "Bob": {bob_secret: 3},       # 1 2 -> 9 9+8=17
     }
 
     expr = (alice_secret - bob_secret)
@@ -240,3 +240,14 @@ def test_suite8():
     )
     expected = (((3 + 8) + (14 * 9) - 2) * (5 + 7))
     suite(parties, expr, expected)
+
+
+if __name__ == "__main__":
+    # test_suite1()
+    # test_suite2()
+    # test_suite3()
+    # test_suite4()
+    # test_suite5()
+    # test_suite6()
+    test_suite7()
+    # test_suite8()
