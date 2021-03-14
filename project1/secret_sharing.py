@@ -6,7 +6,7 @@ from expression import Expression, Scalar, Secret
 from typing import List, Optional
 import random
 
-MODULUS = 1901
+MODULUS = 7919
 
 
 class Share:
@@ -17,6 +17,7 @@ class Share:
     def __init__(self, value: int):
         # Adapt constructor arguments as you wish
         self.value = value
+        self.bn = value
 
     def __repr__(self):
         # Helps with debugging.
@@ -38,10 +39,11 @@ class Share:
 def share_secret(secret: int, num_shares: int) -> List[Share]:
     """Generate secret shares."""
     shares = list()
-    for _ in range(num_shares):
+    for _ in range(num_shares-1):
         shares.append(Share(random.randrange(0, MODULUS)))
-    shares[0].value = (secret - sum(share.value for i,
-                                    share in enumerate(shares) if i != 0)) % MODULUS
+    totalSum = sum(share.value for share in shares) % MODULUS
+    shareAtZero = Share((secret-totalSum) % MODULUS)
+    shares.insert(0, shareAtZero)
     return shares
 
 

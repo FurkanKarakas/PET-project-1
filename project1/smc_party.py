@@ -22,7 +22,7 @@ from expression import (
 )
 from protocol import ProtocolSpec
 from secret_sharing import(
-    int_from_bytes, reconstruct_secret,
+    int_from_bytes, int_to_bytes, reconstruct_secret,
     share_secret,
     Share,
 )
@@ -42,10 +42,6 @@ class SMCParty:
         protocol_spec (ProtocolSpec): Protocol specification
         value_dict (dict): Dictionary assigning values to secrets belonging to this client.
     """
-    # secretIdDict is the dictionary to map IDs of secrets (base64-encoded) to client IDs (str).
-    secretIdDict = dict()
-    # shareDict is the dictionary to store the secret shares retrieved from other clients
-    shareDict = dict()
 
     def __init__(
         self,
@@ -60,6 +56,14 @@ class SMCParty:
         self.client_id = client_id
         self.protocol_spec = protocol_spec
         self.value_dict = value_dict
+        # secretIdDict is the dictionary to map IDs of secrets (base64-encoded) to client IDs (str).
+        self.secretIdDict: Dict[str, str] = dict()
+        # shareDict is the dictionary to store the secret shares retrieved from other clients
+        self.shareDict: Dict[str, Share] = dict()
+        # tempClientId is the temporary identifier for the intermediate multiplications
+        self.tempClientId = "0"
+        # tempBytes is the temporary bytes for the intermediate multiplications
+        self.tempBytes = bytes(4)
 
     def run(self) -> int:
         """
@@ -85,7 +89,7 @@ class SMCParty:
         # Obtain the privately sent shares
         for client_id in self.protocol_spec.participant_ids:
             shareBytes = self.comm.retrieve_private_message(client_id)
-            self.shareDict[client_id] = int_from_bytes(shareBytes)
+            self.shareDict[client_id] = Share(int_from_bytes(shareBytes))
         time.sleep(1)
         share = self.process_expression(self.protocol_spec.expr)
         # Broadcast the result
@@ -143,6 +147,116 @@ class SMCParty:
             return self.process_expression(expr.leftExpression) - self.process_expression(expr.rightExpression)
 
         if isinstance(expr, Mult):
+            # If the expression `Mult` involves secrets, we need to use "Beaver triplets"
+            if isinstance(expr.leftExpression, Secret) and isinstance(expr.rightExpression, Secret):
+                # TODO
+                opId = ""
+                # x is the client_id
+                x = self.secretIdDict[expr.leftExpression.id.decode("utf-8")]
+                opId += x
+                # x is the share of the client_id
+                x = self.shareDict[x]
+                # y is the client_id
+                y = self.secretIdDict[expr.rightExpression.id.decode("utf-8")]
+                opId += y
+                print("\n\n\n", "OpId:", opId, "\n\n\n")
+                # y is the share of client_id
+                y = self.shareDict[y]
+                share_a, share_b, share_c = self.comm.retrieve_beaver_triplet_shares(
+                    opId)
+                share_a, share_b, share_c = Share(
+                    share_a), Share(share_b), Share(share_c)
+                x_a_broadcast = x-share_a
+                y_b_broadcast = y-share_b
+                # Broadcast the computed shares
+                opId_x_a = opId+"_x_a"
+                opId_y_b = opId+"_y_b"
+                self.comm.publish_message(
+                    opId_x_a, int_to_bytes(x_a_broadcast.value))
+                self.comm.publish_message(
+                    opId_y_b, int_to_bytes(y_b_broadcast.value))
+                # Wait so that everyone can read on time
+                time.sleep(1)
+                # Read the shares
+                x_a_sharesList = list()
+                y_b_sharesList = list()
+                for client_id in self.protocol_spec.participant_ids:
+                    # x and a
+                    share_x_a = self.comm.retrieve_public_message(
+                        client_id, opId_x_a)
+                    share_x_a = int_from_bytes(share_x_a)
+                    share_x_a = Share(share_x_a)
+                    x_a_sharesList.append(share_x_a)
+                    # y and b
+                    share_y_b = self.comm.retrieve_public_message(
+                        client_id, opId_y_b)
+                    share_y_b = int_from_bytes(share_y_b)
+                    share_y_b = Share(share_y_b)
+                    y_b_sharesList.append(share_y_b)
+                # Reconstruct the x-a and y-b
+                x_a_re = reconstruct_secret(x_a_sharesList)
+                x_a_re = Share(x_a_re)
+                y_b_re = reconstruct_secret(y_b_sharesList)
+                y_b_re = Share(y_b_re)
+                # 4th step: locally compute the share of z
+                z = share_c + x * y_b_re + y * x_a_re
+                # If I have the ID 0, add additional term -(x-a)(y-b)
+                if self.client_id == self.protocol_spec.participant_ids[0]:
+                    z -= (x_a_re*y_b_re)
+                # print(f"{self.client_id} share_a: {share_a}, share_b: {share_b}, share_c: {share_c} share_x: {x}, share_y: {y}, share_z: {z}, x-a: {x_a_re}, y-b: {y_b_re}")
+                return z
+
+            # Secret - Expression
+            if isinstance(expr.leftExpression, Secret) and not isinstance(expr.rightExpression, Scalar):
+                right = self.process_expression(expr.rightExpression)
+                # We need to register this
+                newSecret = Secret(right.value, self.tempBytes)
+                secretId = newSecret.id
+                self.secretIdDict[secretId.decode("utf-8")] = self.tempClientId
+                self.shareDict[self.tempClientId] = right
+                # Increment the temporary values by 1
+                self.tempClientId = str(int(self.tempClientId)+1)
+                self.tempBytes = int_to_bytes(int_from_bytes(self.tempBytes)+1)
+                return self.process_expression(expr.leftExpression) * self.process_expression(newSecret)
+
+            # Expression - Secret
+            if not isinstance(expr.leftExpression, Scalar) and isinstance(expr.rightExpression, Secret):
+                print("\n\n\nHello world!\n\n\n")
+                left = self.process_expression(expr.leftExpression)
+                # We need to register this
+                newSecret = Secret(left.value)
+                secretId = newSecret.id
+                self.secretIdDict[secretId.decode("utf-8")] = self.tempClientId
+                self.shareDict[self.tempClientId] = left
+                # Increment the temporary value by 1
+                self.tempClientId = str(int(self.tempClientId)+1)
+                print("\n\n\n", self.secretIdDict)
+                print(self.shareDict, "\n\n\n")
+                return self.process_expression(newSecret) * self.process_expression(expr.rightExpression)
+
+            # Expression - Expression
+            if not isinstance(expr.leftExpression, Scalar) and not isinstance(expr.rightExpression, Scalar):
+                left = self.process_expression(expr.leftExpression)
+                # We need to register this
+                newSecret = Secret(left.value)
+                secretId = newSecret.id
+                self.secretIdDict[secretId.decode("utf-8")] = self.tempClientId
+                self.shareDict[self.tempClientId] = left
+                # Increment the temporary value by 1
+                self.tempClientId = str(int(self.tempClientId)+1)
+
+                right = self.process_expression(expr.rightExpression)
+                # We need to register this
+                newSecret2 = Secret(right.value)
+                secretId2 = newSecret2.id
+                self.secretIdDict[secretId2.decode(
+                    "utf-8")] = self.tempClientId
+                self.shareDict[self.tempClientId] = right
+                # Increment the temporary value by 1
+                self.tempClientId = str(int(self.tempClientId)+1)
+                return self.process_expression(newSecret) * self.process_expression(newSecret2)
+
+            # Process further
             return self.process_expression(expr.leftExpression) * self.process_expression(expr.rightExpression)
 
         if isinstance(expr, Secret):
@@ -155,12 +269,14 @@ class SMCParty:
             # Map it to the share
             shareVal = self.shareDict[client_id]
             # Finally, return it
-            return Share(shareVal)
+            return shareVal
 
         if isinstance(expr, Scalar):
             return Share(expr.value)  # type: ignore
 
-        return Share(-1)
+        # This case shouldn't happen
+        raise Exception(
+            "Expression not recognized. Are you sure the input is correct?")
 
     # Feel free to add as many methods as you want.
 

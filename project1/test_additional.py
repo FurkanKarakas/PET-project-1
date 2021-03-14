@@ -98,5 +98,43 @@ def myTest1():
     suite(parties, expr, expected)
 
 
+def myTest2():
+    """
+    f(a, b) = a * b
+    """
+    alice_secret = Secret()
+    bob_secret = Secret()
+
+    parties = {
+        "Alice": {alice_secret: 14},
+        "Bob": {bob_secret: 3},
+    }
+
+    expr = alice_secret*bob_secret
+    expected = 14*3
+    suite(parties, expr, expected)
+
+
+def myTest3():
+    """
+    f(a, b, c) = a * b * c
+    """
+    alice_secret = Secret()
+    bob_secret = Secret()
+    charlie_secret = Secret()
+
+    parties = {
+        "Alice": {alice_secret: 14},
+        "Bob": {bob_secret: 3},
+        "Charlie": {charlie_secret: 10},
+    }
+
+    expr = (alice_secret*bob_secret)*charlie_secret
+    expected = 14*3*10
+    suite(parties, expr, expected)
+
+
 if __name__ == "__main__":
-    myTest1()
+    # myTest1()
+    # myTest2()
+    myTest3()
