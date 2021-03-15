@@ -2,8 +2,7 @@
 Secret sharing scheme.
 """
 
-from expression import Expression, Scalar, Secret
-from typing import List, Optional
+from typing import List
 import random
 
 MODULUS = 7919

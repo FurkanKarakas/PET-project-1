@@ -1,19 +1,13 @@
 """
-Integration tests that verify different aspects of the protocol.
-You can *add* new tests here, but it is best to  add them to a new test file.
-
-ALL EXISTING TESTS IN THIS SUITE SHOULD PASS WITHOUT ANY MODIFICATION TO THEM.
+Additional tests
 """
 
-from multiprocessing.process import active_children
 import time
 from multiprocessing import Process, Queue
-
-import pytest
-
 from expression import Scalar, Secret
 from protocol import ProtocolSpec
 from server import run
+from secret_sharing import MODULUS
 
 from smc_party import SMCParty
 
@@ -78,7 +72,7 @@ def suite(parties, expr, expected):
         assert result == expected
 
 
-def myTest1():
+def test1():
     """
     f(a, b, c) = b + Scalar(100) + a - c - Scalar(5) + Scalar(4)
     """
@@ -98,7 +92,7 @@ def myTest1():
     suite(parties, expr, expected)
 
 
-def myTest2():
+def test2():
     """
     f(a, b) = a * b
     """
@@ -115,7 +109,7 @@ def myTest2():
     suite(parties, expr, expected)
 
 
-def myTest3():
+def test3():
     """
     f(a, b, c) = a * b * c
     """
@@ -134,7 +128,7 @@ def myTest3():
     suite(parties, expr, expected)
 
 
-def myTest4():
+def test4():
     """
     f(a, b, c) = a * (b + c)
     """
@@ -153,8 +147,186 @@ def myTest4():
     suite(parties, expr, expected)
 
 
+def test5():
+    """
+    f(a, b, c, d) = K0 * K1
+    """
+    a = Secret()
+    b = Secret()
+    c = Secret()
+    d = Secret()
+    K0 = Scalar(15)
+    K1 = Scalar(8)
+    K2 = Scalar(7)
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+        "Charlie": {c: 10},
+        "David": {d: 11},
+    }
+
+    expr = K0 * K1
+    expected = 15*8
+    suite(parties, expr, expected)
+
+
+def test6():
+    """
+    f(a, b) = K0 + K1
+    """
+    a = Secret()
+    b = Secret()
+    K0 = Scalar(15)
+    K1 = Scalar(8)
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+    }
+
+    expr = K0 + K1
+    expected = 15+8
+    suite(parties, expr, expected)
+
+
+def test7():
+    """
+    f(a, b) = K0 - K1
+    """
+    a = Secret()
+    b = Secret()
+    K0 = Scalar(15)
+    K1 = Scalar(8)
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+    }
+
+    expr = K0 - K1
+    expected = 15-8
+    suite(parties, expr, expected)
+
+
+def test8():
+    """
+    f(a, b) = K0
+    """
+    a = Secret()
+    b = Secret()
+    K0 = Scalar(15)
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+    }
+
+    expr = K0
+    expected = 15
+    suite(parties, expr, expected)
+
+
+def test9():
+    """
+    f(a, b) = K0 * K1 * K2
+    """
+    a = Secret()
+    b = Secret()
+    K0 = Scalar(15)
+    K1 = Scalar(3)
+    K2 = Scalar(4)
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+    }
+
+    expr = K0*K1*K2
+    expected = 15*3*4
+    suite(parties, expr, expected)
+
+
+def test10():
+    """
+    f(a, b) = a
+    """
+    a = Secret()
+    b = Secret()
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+    }
+
+    expr = a
+    expected = 14
+    suite(parties, expr, expected)
+
+
+def test11():
+    """
+    f(a, b, c) = b
+    """
+    a = Secret()
+    b = Secret()
+    c = Secret()
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+        "Charlie": {c: 17}
+    }
+
+    expr = b
+    expected = 3
+    suite(parties, expr, expected)
+
+
+def test12():
+    """
+    f(a, b) = a * (K0 * K1)
+    """
+    a = Secret()
+    b = Secret()
+    K0 = Scalar(5)
+    K1 = Scalar(10)
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+    }
+
+    expr = a * (K0 * K1)
+    expected = 14*5*10
+    suite(parties, expr, expected)
+
+
+def test13():
+    """
+    f(a, b) = (a + b) * K0 * K1
+    """
+    a = Secret()
+    b = Secret()
+    K0 = Scalar(5)
+    K1 = Scalar(10)
+
+    parties = {
+        "Alice": {a: 14},
+        "Bob": {b: 3},
+    }
+
+    expr = (a + b) * K0 * K1
+    expected = 17*5*10
+    suite(parties, expr, expected)
+
+
 if __name__ == "__main__":
-    # myTest1()
-    # myTest2()
-    # myTest3()
-    myTest4()
+    # test1()
+    # test2()
+    # test3()
+    # test4()
+    # test5()
+    # test6()
+    # test8()
+    test13()

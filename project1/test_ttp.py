@@ -5,7 +5,7 @@ Testing ttp is not obligatory.
 MODIFY THIS FILE.
 """
 
-from secret_sharing import MODULUS, reconstruct_secret
+from secret_sharing import reconstruct_secret
 from ttp import TrustedParamGenerator
 from secret_sharing import Share
 

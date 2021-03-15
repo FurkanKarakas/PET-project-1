@@ -4,7 +4,6 @@ Trusted parameters generator.
 MODIFY THIS FILE.
 """
 
-import collections
 import random
 from typing import (
     Dict, List,
@@ -12,7 +11,6 @@ from typing import (
     Tuple,
 )
 
-from communication import Communication
 from secret_sharing import(
     MODULUS, share_secret,
     Share,
@@ -55,8 +53,8 @@ class TrustedParamGenerator:
         b_shares = share_secret(b, len(self.participant_ids))
         c_shares = share_secret(c, len(self.participant_ids))
         self.operationDict[op_id] = a_shares, b_shares, c_shares
-        print(f"\n\n\nTTP, a: {a}, b: {b}, c: {c}")
-        print(a_shares, b_shares, c_shares, "\n\n\n")
+        #print(f"\n\n\nTTP, a: {a}, b: {b}, c: {c}")
+        #print(a_shares, b_shares, c_shares, "\n\n\n")
         return a_shares[index], b_shares[index], c_shares[index]
 
     # Feel free to add as many methods as you want.

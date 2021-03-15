@@ -11,7 +11,7 @@ MODIFY THIS FILE.
 
 import base64
 import random
-from typing import Optional, List
+from typing import Optional
 
 
 ID_BYTES = 4
@@ -37,6 +37,7 @@ class Expression:
         if id is None:
             id = gen_id()
         self.id = id
+        self.containsSecret = True
 
     def __add__(self, other):
         return Add(self, other)
@@ -63,6 +64,7 @@ class Scalar(Expression):
     ):
         self.value = value
         super().__init__(id)
+        self.containsSecret = False
 
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.value)})"
@@ -105,6 +107,7 @@ class Add(Expression):
         super().__init__(id)
         self.leftExpression = leftExpression
         self.rightExpression = rightExpression
+        self.containsSecret = self.leftExpression.containsSecret or self.rightExpression.containsSecret
 
     def __repr__(self):
         return f"({self.leftExpression.__repr__()} + {self.rightExpression.__repr__()})"
@@ -122,6 +125,7 @@ class Sub(Expression):
         super().__init__(id)
         self.leftExpression = leftExpression
         self.rightExpression = rightExpression
+        self.containsSecret = self.leftExpression.containsSecret or self.rightExpression.containsSecret
 
     def __repr__(self):
         return f"({self.leftExpression.__repr__()} - {self.rightExpression.__repr__()})"
@@ -139,6 +143,7 @@ class Mult(Expression):
         super().__init__(id)
         self.leftExpression = leftExpression
         self.rightExpression = rightExpression
+        self.containsSecret = self.leftExpression.containsSecret or self.rightExpression.containsSecret
 
     def __repr__(self):
         return f"{self.leftExpression.__repr__()} * {self.rightExpression.__repr__()}"

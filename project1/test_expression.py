@@ -39,8 +39,20 @@ def testSub():
     assert repr(expr) == "(Scalar(5) - Secret())"
 
 
+def testContainExpression():
+    a = Scalar(5)
+    b = Secret()
+    expr1 = a-b
+    assert expr1.containsSecret
+    expr2 = a+b
+    assert expr2.containsSecret
+    expr3 = a
+    assert not expr3.containsSecret
+    expr4 = b
+    assert expr4.containsSecret
+    expr5 = a*b
+    assert expr5.containsSecret
+
+
 if __name__ == "__main__":
-    test_expr_construction()
-    test()
-    testMult()
-    testSub()
+    testContainExpression()

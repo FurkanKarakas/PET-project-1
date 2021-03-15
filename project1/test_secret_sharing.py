@@ -6,7 +6,7 @@ MODIFY THIS FILE.
 """
 
 
-from secret_sharing import Share, reconstruct_secret, share_secret
+from secret_sharing import reconstruct_secret, share_secret
 
 
 def test():
