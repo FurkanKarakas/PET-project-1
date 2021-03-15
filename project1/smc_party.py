@@ -8,6 +8,7 @@ MODIFY THIS FILE.
 import collections
 import json
 import time
+import base64
 from typing import (
     Dict,
     Set,
@@ -113,7 +114,7 @@ class SMCParty:
         if isinstance(expr, Add):
             # Process the `Add` expression based on its left and right expressions
             if isinstance(expr.leftExpression, Scalar) and isinstance(expr.rightExpression, Scalar):
-                # If the current client is the first client
+             # If the current client is the first client
                 if self.client_id == self.protocol_spec.participant_ids[0]:
                     return self.process_expression(expr.leftExpression) + self.process_expression(expr.rightExpression)
                 # Otherwise, don't add the scalar values
@@ -210,51 +211,58 @@ class SMCParty:
             if isinstance(expr.leftExpression, Secret) and not isinstance(expr.rightExpression, Scalar):
                 right = self.process_expression(expr.rightExpression)
                 # We need to register this
-                newSecret = Secret(right.value, self.tempBytes)
+                b64encoded = base64.b64encode(self.tempBytes)
+                newSecret = Secret(right.value, b64encoded)
                 secretId = newSecret.id
                 self.secretIdDict[secretId.decode("utf-8")] = self.tempClientId
                 self.shareDict[self.tempClientId] = right
                 # Increment the temporary values by 1
                 self.tempClientId = str(int(self.tempClientId)+1)
                 self.tempBytes = int_to_bytes(int_from_bytes(self.tempBytes)+1)
-                return self.process_expression(expr.leftExpression) * self.process_expression(newSecret)
+                print(self.secretIdDict, self.shareDict)
+                return self.process_expression(Mult(expr.leftExpression, newSecret))
 
             # Expression - Secret
             if not isinstance(expr.leftExpression, Scalar) and isinstance(expr.rightExpression, Secret):
                 print("\n\n\nHello world!\n\n\n")
                 left = self.process_expression(expr.leftExpression)
                 # We need to register this
-                newSecret = Secret(left.value)
+                b64encoded = base64.b64encode(self.tempBytes)
+                newSecret = Secret(left.value, b64encoded)
                 secretId = newSecret.id
                 self.secretIdDict[secretId.decode("utf-8")] = self.tempClientId
                 self.shareDict[self.tempClientId] = left
-                # Increment the temporary value by 1
+                # Increment the temporary values by 1
                 self.tempClientId = str(int(self.tempClientId)+1)
+                self.tempBytes = int_to_bytes(int_from_bytes(self.tempBytes)+1)
                 print("\n\n\n", self.secretIdDict)
                 print(self.shareDict, "\n\n\n")
-                return self.process_expression(newSecret) * self.process_expression(expr.rightExpression)
+                return self.process_expression(Mult(newSecret, expr.rightExpression))
 
             # Expression - Expression
             if not isinstance(expr.leftExpression, Scalar) and not isinstance(expr.rightExpression, Scalar):
                 left = self.process_expression(expr.leftExpression)
                 # We need to register this
-                newSecret = Secret(left.value)
+                b64encoded = base64.b64encode(self.tempBytes)
+                newSecret = Secret(left.value, b64encoded)
                 secretId = newSecret.id
                 self.secretIdDict[secretId.decode("utf-8")] = self.tempClientId
                 self.shareDict[self.tempClientId] = left
-                # Increment the temporary value by 1
+                # Increment the temporary values by 1
                 self.tempClientId = str(int(self.tempClientId)+1)
+                self.tempBytes = int_to_bytes(int_from_bytes(self.tempBytes)+1)
 
                 right = self.process_expression(expr.rightExpression)
                 # We need to register this
-                newSecret2 = Secret(right.value)
-                secretId2 = newSecret2.id
-                self.secretIdDict[secretId2.decode(
-                    "utf-8")] = self.tempClientId
+                b64encoded = base64.b64encode(self.tempBytes)
+                newSecret2 = Secret(right.value, b64encoded)
+                secretId = newSecret2.id
+                self.secretIdDict[secretId.decode("utf-8")] = self.tempClientId
                 self.shareDict[self.tempClientId] = right
-                # Increment the temporary value by 1
+                # Increment the temporary values by 1
                 self.tempClientId = str(int(self.tempClientId)+1)
-                return self.process_expression(newSecret) * self.process_expression(newSecret2)
+                self.tempBytes = int_to_bytes(int_from_bytes(self.tempBytes)+1)
+                return self.process_expression(Mult(newSecret, newSecret2))
 
             # Process further
             return self.process_expression(expr.leftExpression) * self.process_expression(expr.rightExpression)
