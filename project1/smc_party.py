@@ -19,6 +19,7 @@ from secret_sharing import(
     share_secret,
     Share,
 )
+import time
 
 # Feel free to add as many imports as you want.
 
@@ -57,24 +58,41 @@ class SMCParty:
         self.tempClientId = "0"
         # *tempBytes is the temporary bytes for the intermediate multiplications
         self.tempBytes = bytes(4)
+        # *receivedBytes is the number of bytes received from the server
+        self.receivedBytes = 0
+        # *sentBytes is the number of bytes sent to the server
+        self.sentBytes = 0
 
     def run(self) -> int:
         """
         The method the client use to do the SMC.
         """
         # If the expression involves only scalars, just compute and return the result
+        startTime = time.time()
         if not self.protocol_spec.expr.containsSecret:
             result = self.processScalars(self.protocol_spec.expr)
+            endTime = time.time()
+            timeTaken = "{: .2f}".format(endTime-startTime)
+            print("******************************************")
+            print("Client ID:", self.client_id)
+            print("Time taken:", timeTaken)
+            print("Bytes sent:", self.sentBytes)
+            print("Bytes received:", self.receivedBytes)
+            print("******************************************")
+            with open(f"{self.client_id}.txt", "a") as f:
+                f.write(f"{timeTaken} {self.receivedBytes} {self.sentBytes}\n")
             return result.value
 
         secret, secretVal = list(self.value_dict.items())[0]
         # Publish the IDs of the secrets so that clients know which secret belongs to who
         self.comm.publish_message("IDs of secrets", secret.id)
+        self.sentBytes += len(secret.id)
         # Make sure that everyone can publish before reading
         # time.sleep(1)
         for client_id in self.protocol_spec.participant_ids:
             secretValC = self.comm.retrieve_public_message(
                 client_id, "IDs of secrets")
+            self.receivedBytes += len(secretValC)
             self.secretIdDict[secretValC.decode("utf-8")] = client_id
         numClients = len(self.protocol_spec.participant_ids)
         secretShares = share_secret(secretVal, numClients)
@@ -82,28 +100,42 @@ class SMCParty:
         for i, client_id in enumerate(self.protocol_spec.participant_ids):
             self.comm.send_private_message(
                 client_id, self.client_id, bytes(secretShares[i]))
+            self.sentBytes += len(bytes(secretShares[i]))
         # Give some time
         # time.sleep(1)
         # Obtain the privately sent shares
         for client_id in self.protocol_spec.participant_ids:
             shareBytes = self.comm.retrieve_private_message(client_id)
+            self.receivedBytes += len(shareBytes)
             self.shareDict[client_id] = Share(int_from_bytes(shareBytes))
         # time.sleep(1)
         share = self.process_expression(self.protocol_spec.expr)
         # Broadcast the result
         self.comm.publish_message("Final", bytes(share))
+        self.sentBytes += len(bytes(share))
         # Wait a little
         # time.sleep(1)
         # Read the responses
         responseShares = list()
         for client_id in self.protocol_spec.participant_ids:
             shareFinal = self.comm.retrieve_public_message(client_id, "Final")
+            self.receivedBytes += len(shareFinal)
             shareFinal = int_from_bytes(shareFinal)
             shareFinal = Share(shareFinal)
             responseShares.append(shareFinal)
         # Reconstruct the result
         result = reconstruct_secret(responseShares)
-        #print(f"\n\n\n{self.client_id}: result is: {result}\n\n\n")
+        # print(f"\n\n\n{self.client_id}: result is: {result}\n\n\n")
+        endTime = time.time()
+        timeTaken = "{: .2f}".format(endTime-startTime)
+        print("******************************************")
+        print("Client ID:", self.client_id)
+        print("Time taken: {:.2f}".format(endTime-startTime))
+        print("Bytes sent:", self.sentBytes)
+        print("Bytes received:", self.receivedBytes)
+        print("******************************************")
+        with open(f"{self.client_id}.txt", "a") as f:
+            f.write(f"{timeTaken} {self.receivedBytes} {self.sentBytes}\n")
         return result
 
     def processScalars(self, expr: Expression) -> Share:
@@ -177,11 +209,13 @@ class SMCParty:
                 # y is the client_id
                 y = self.secretIdDict[expr.rightExpression.id.decode("utf-8")]
                 opId += y
-                #print("\n\n\n", "OpId:", opId, "\n\n\n")
+                # print("\n\n\n", "OpId:", opId, "\n\n\n")
                 # y is the share of client_id
                 y = self.shareDict[y]
                 share_a, share_b, share_c = self.comm.retrieve_beaver_triplet_shares(
                     opId)
+                # Assuming that an integer is 4 bytes
+                self.receivedBytes += 12
                 share_a, share_b, share_c = Share(
                     share_a), Share(share_b), Share(share_c)
                 x_a_broadcast = x-share_a
@@ -193,6 +227,8 @@ class SMCParty:
                     opId_x_a, int_to_bytes(x_a_broadcast.value))
                 self.comm.publish_message(
                     opId_y_b, int_to_bytes(y_b_broadcast.value))
+                self.sentBytes += len(int_to_bytes(x_a_broadcast.value)) + \
+                    len(int_to_bytes(y_b_broadcast.value))
                 # Wait so that everyone can read on time
                 # time.sleep(1)
                 # Read the shares
@@ -202,12 +238,14 @@ class SMCParty:
                     # x and a
                     share_x_a = self.comm.retrieve_public_message(
                         client_id, opId_x_a)
+                    self.receivedBytes += len(share_x_a)
                     share_x_a = int_from_bytes(share_x_a)
                     share_x_a = Share(share_x_a)
                     x_a_sharesList.append(share_x_a)
                     # y and b
                     share_y_b = self.comm.retrieve_public_message(
                         client_id, opId_y_b)
+                    self.receivedBytes += len(share_y_b)
                     share_y_b = int_from_bytes(share_y_b)
                     share_y_b = Share(share_y_b)
                     y_b_sharesList.append(share_y_b)
@@ -236,12 +274,12 @@ class SMCParty:
                 # Increment the temporary values by 1
                 self.tempClientId = str(int(self.tempClientId)+1)
                 self.tempBytes = int_to_bytes(int_from_bytes(self.tempBytes)+1)
-                #print(self.secretIdDict, self.shareDict)
+                # print(self.secretIdDict, self.shareDict)
                 return self.process_expression(Mult(expr.leftExpression, newSecret))
 
             # Expression - Secret
             if expr.leftExpression.containsSecret and isinstance(expr.rightExpression, Secret):
-                #print("\n\n\nHello world!\n\n\n")
+                # print("\n\n\nHello world!\n\n\n")
                 left = self.process_expression(expr.leftExpression)
                 # We need to register this
                 b64encoded = base64.b64encode(self.tempBytes)
@@ -252,8 +290,8 @@ class SMCParty:
                 # Increment the temporary values by 1
                 self.tempClientId = str(int(self.tempClientId)+1)
                 self.tempBytes = int_to_bytes(int_from_bytes(self.tempBytes)+1)
-                #print("\n\n\n", self.secretIdDict)
-                #print(self.shareDict, "\n\n\n")
+                # print("\n\n\n", self.secretIdDict)
+                # print(self.shareDict, "\n\n\n")
                 return self.process_expression(Mult(newSecret, expr.rightExpression))
 
             # Expression - Expression
